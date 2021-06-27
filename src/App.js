@@ -42,6 +42,7 @@ function App() {
         class: "editorTextArea",
       },
     },
+    
     //force the cursor to jump in the editor on initialization.
     autofocus: true,
     // disable the CSS injected by titap
