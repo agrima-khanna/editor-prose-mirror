@@ -11,6 +11,11 @@ import Collaboration from "@tiptap/extension-collaboration";
 import * as Y from "yjs";
 import { WebrtcProvider } from "y-webrtc";
 import CollaborationCursor from "@tiptap/extension-collaboration-cursor";
+import Mention from "@tiptap/extension-mention";
+import { MentionList } from "./MentionList";
+import tippy from "tippy.js";
+import { ReactRenderer } from "@tiptap/react";
+import { userNames } from "./userNames";
 
 // A new Y document
 const ydoc = new Y.Doc();
@@ -63,5 +68,54 @@ export var extensions = [
     provider: provider,
     name: "Cyndi Lauper",
     color: "#f783ac",
+  }),
+  Mention.configure({
+    HTMLAttributes: {
+      class: "mention",
+    },
+    suggestion: {
+      items: (query) => {
+        return userNames
+          .filter((item) => item.toLowerCase().startsWith(query.toLowerCase()))
+          .slice(0, 5);
+      },
+      render: () => {
+        let reactRenderer;
+        let popup;
+
+        return {
+          onStart: (props) => {
+            reactRenderer = new ReactRenderer(MentionList, {
+              props,
+              editor: props.editor,
+            });
+
+            popup = tippy("body", {
+              getReferenceClientRect: props.clientRect,
+              appendTo: () => document.body,
+              content: reactRenderer.element,
+              showOnCreate: true,
+              interactive: true,
+              trigger: "manual",
+              placement: "bottom-start",
+            });
+          },
+          onUpdate(props) {
+            reactRenderer.updateProps(props);
+
+            popup[0].setProps({
+              getReferenceClientRect: props.clientRect,
+            });
+          },
+          onKeyDown(props) {
+            return reactRenderer.ref?.onKeyDown(props);
+          },
+          onExit() {
+            popup[0].destroy();
+            reactRenderer.destroy();
+          },
+        };
+      },
+    },
   }),
 ];
